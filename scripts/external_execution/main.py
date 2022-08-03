@@ -4,6 +4,7 @@
 
 import logging
 import requests
+import schedule
 import sys
 import time
 
@@ -97,18 +98,17 @@ def check_job_status(
     return response["entity"]["job_run"]["state"]
 
 
-if __name__ == "__main__":
-    # 自身の環境に合わせて修正
+def job():
+    # ご自身の環境に合わせて修正
     api_key = "<your api key>"
     job_name = "<your job name>"
     project_id = "<your project id>"
-
     bearer_token = generate_bearer_token(api_key)
-    logger.info(f"Bearer token is [{bearer_token}].")
+    logger.info("Bearer token has been generated.")
     job_id = get_job_id(bearer_token, project_id, job_name)
-    logger.info(f"Job id is [{job_id}].")
+    logger.info(f"Job ID is [{job_id}].")
     run_id = run_job(bearer_token, job_id, project_id)
-    logger.info(f"Run id is [{run_id}].")
+    logger.info(f"Run ID is [{run_id}].")
     retury_times = 12  # JOB ステータス確認リトライ回数
     retry_sleep = 6    # JOB ステータス確認 sleep 期間(秒)
     try:
@@ -120,14 +120,27 @@ if __name__ == "__main__":
             # Job 完了確認
             if job_status == "Completed":
                 logger.info("Completed.")
-                sys.exit(0)
+                return
             time.sleep(retry_sleep)
             # タイムアウト確認
             if i == retury_times-1:
                 raise TimeoutError()
     except TimeoutError:
         logger.exception("Timeout error.")
-        sys.exit(1)
+        raise
     except Exception:
         logger.exception("Unexpected exception.")
+        raise
+
+
+if __name__ == "__main__":
+    try:
+        logger.info("Job is working...")
+        # 1分毎に Job を実行
+        schedule.every(1).minutes.do(job)
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+    except Exception as e:
+        logger.exception("Errors occurred.", e)
         sys.exit(1)
