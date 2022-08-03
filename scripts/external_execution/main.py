@@ -1,5 +1,5 @@
 """
-外部から Watson Studio Cloud の Jupyter Notebook ジョブを実行
+外部から Watson Studio Cloud のジョブを実行
 """
 
 import logging
