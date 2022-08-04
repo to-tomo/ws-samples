@@ -98,7 +98,10 @@ def check_job_status(
     return response["entity"]["job_run"]["state"]
 
 
-def job():
+def job() -> None:
+    """
+    Job 処理関数
+    """
     # ご自身の環境に合わせて修正
     api_key = "<your api key>"
     job_name = "<your job name>"
@@ -111,36 +114,35 @@ def job():
     logger.info(f"Run ID is [{run_id}].")
     retury_times = 12  # JOB ステータス確認リトライ回数
     retry_sleep = 6    # JOB ステータス確認 sleep 期間(秒)
-    try:
-        for i in range(retury_times):
-            job_status = check_job_status(
-                bearer_token, job_id, run_id, project_id
-                )
-            logger.info(f"Job status is [{job_status}].")
-            # Job 完了確認
-            if job_status == "Completed":
-                logger.info("Completed.")
-                return
-            time.sleep(retry_sleep)
-            # タイムアウト確認
-            if i == retury_times-1:
-                raise TimeoutError()
-    except TimeoutError:
-        logger.exception("Timeout error.")
-        raise
-    except Exception:
-        logger.exception("Unexpected exception.")
-        raise
+    for i in range(retury_times):
+        job_status = check_job_status(
+            bearer_token, job_id, run_id, project_id
+            )
+        logger.info(f"Job status is [{job_status}].")
+        # Job 完了確認
+        if job_status == "Completed":
+            logger.info("Completed.")
+            return
+        elif job_status == "Canceled":
+            logger.info("Canceled.")
+            return
+        time.sleep(retry_sleep)
+        # タイムアウト確認
+        if i == retury_times-1:
+            raise TimeoutError()
 
 
 if __name__ == "__main__":
     try:
         logger.info("Job is working...")
         # 1分毎に Job を実行
-        schedule.every(1).minutes.do(job)
+        schedule.every(1).minutes.do(job())
         while True:
             schedule.run_pending()
             time.sleep(1)
-    except Exception as e:
-        logger.exception("Errors occurred.", e)
+    except TimeoutError:
+        logger.exception("Timeout error.")
+        sys.exit(1)
+    except Exception:
+        logger.exception("Unexpected exception.")
         sys.exit(1)
