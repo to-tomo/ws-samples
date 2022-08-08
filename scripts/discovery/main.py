@@ -5,8 +5,8 @@ Watson Discovery V2 API を使用して検索実行
 import json
 import logging
 import sys
-from ibm_watson import DiscoveryV2
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson import DiscoveryV2
 
 
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +20,7 @@ def authentication_v2(api_key: str, version: str) -> DiscoveryV2:
     """
     # URL の構造明示のため分解
     region = "<your region>"
-    instance_id = "<your instance_id>"
+    instance_id = "<your instance id>"
     url = f"https://api.{region}.discovery.watson.cloud.ibm.com/instances/{instance_id}"  # noqa: E501
     authenticator = IAMAuthenticator(api_key)
     discovery = DiscoveryV2(
@@ -50,7 +50,7 @@ def query_v2(
 
 
 if __name__ == "__main__":
-    api_key_v2 = "your api key"
+    api_key_v2 = "<your api key>"
     version_v2 = "2020-08-30"
     # https://<region>.discovery.watson.cloud.ibm.com/v2/instances/(省略)/projects/<your project id>/workspace から抜粋  # noqa: E501
     project_id = "<your project id>"
