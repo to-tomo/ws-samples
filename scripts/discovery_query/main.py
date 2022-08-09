@@ -4,7 +4,7 @@ Watson Discovery V2 API を使用して検索実行
 
 import json
 import logging
-from typing import List
+from typing import Any, List
 import sys
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import DiscoveryV2
@@ -43,7 +43,7 @@ def query_v2(
     sort: str = "+",  # 暫定でデフォルト昇順
     highlight: bool = None,
     spelling_suggestions: bool = None
-        ) -> str:
+        ) -> Any:
     """
     query 検索 or 自然言語 query の実行
     MEMO: https://cloud.ibm.com/apidocs/discovery-data?code=python#query
