@@ -48,6 +48,7 @@ def query_v2(
     query 検索 or 自然言語 query の実行
     MEMO: https://cloud.ibm.com/apidocs/discovery-data?code=python#query
     """
+
     response = discovery.query(
         project_id=project_id,
         collection_ids=collection_ids,
@@ -66,6 +67,7 @@ def query_v2(
 
 
 if __name__ == "__main__":
+    # ご自身の環境に合わせて修正
     api_key_v2 = "<your api key>"
     # IBM Cloud 画面 URLの https://jp-tok.discovery.watson.cloud.ibm.com/v2/instances/(省略)/projects/<your project id>/workspace から抜粋  # noqa: E501
     project_id = "<your project id>"
