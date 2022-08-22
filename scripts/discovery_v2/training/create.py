@@ -1,17 +1,22 @@
 """
-Watson Discovery V2 API を使用して training query 作成
+Watson Discovery V2 API
+    02. トレーニングクエリの追加
+    07. トレーニングクエリ例の追加
 """
 
-import json
 import logging
 import pandas as pd
+from requests import Response
 import sys
-from typing import Any, List
+from typing import List
 
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core.api_exception import ApiException
 from ibm_watson import DiscoveryV2
 from ibm_watson.discovery_v2 import TrainingExample
+
+from helper import authentication_v2, conver_df_to_training_exaples
+from list import get_training_query_v2
+from utils import json_dumps
 
 
 logging.basicConfig(level=logging.INFO)
@@ -21,50 +26,16 @@ pd.set_option("display.max_columns", 50)
 pd.set_option("display.width", 1000)
 
 
-def authentication_v2(api_key: str, url: str) -> DiscoveryV2:
-    """
-    Watson Discovery の認証
-    MEMO: https://cloud.ibm.com/apidocs/discovery-data?code=python#authentication-cloud  # noqa: E501
-    """
-
-    authenticator = IAMAuthenticator(api_key)
-    discovery = DiscoveryV2(
-        version="2020-08-30",
-        authenticator=authenticator
-        )
-    discovery.set_service_url(url)
-    return discovery
-
-
-def prepare_data(collection_id: str, df: pd.DataFrame) -> Any:
-    """
-    training data の準備
-    """
-
-    natural_language_query: str = None  # トレーニング クエリとして使用される自然テキストクエリ
-    examples: List[TrainingExample] = []  # トレーニング例の配列
-    for data in df.itertuples():
-        training_example = TrainingExample(
-            document_id=data.examples_document_id,
-            collection_id=collection_id,
-            relevance=data.examples_relevance
-            )
-        examples.append(training_example)
-        # num_queries 毎に同一の natural_language_query になるため、そのまま上書き
-        natural_language_query = data.natural_language_query
-    return natural_language_query, examples
-
-
 def create_training_query_v2(
-    discovery: DiscoveryV2,
-    project_id: str,
-    natural_language_query: str,
-    examples: List['TrainingExample'],
-    filter: str = None
-        ) -> Any:
+        discovery: DiscoveryV2,
+        project_id: str,
+        natural_language_query: str,
+        examples: List['TrainingExample'],
+        filter: str = None) -> Response:
     """
-    training query 作成処理の実行
-    MEMO: https://cloud.ibm.com/apidocs/discovery-data?cm_sp=ibmdev-_-developer-articles-_-cloudreg&code=python#createtrainingquery  # noqa: E501
+    プロジェクトのトレーニングクエリを追加
+    クエリにはフィルターと自然言語クエリを含めることが出来る
+    MEMO: https://cloud.ibm.com/apidocs/discovery-data#createtrainingquery  # noqa: E501
     """
 
     response = discovery.create_training_query(
@@ -73,44 +44,45 @@ def create_training_query_v2(
         examples=examples,
         filter=filter
         ).get_result()
-    return json.dumps(response, indent=2, ensure_ascii=False)
+    return response
 
 
 if __name__ == "__main__":
     # ご自身の環境に合わせて修正
+    # IBM Cloud 画面: 管理 -> 資格情報 -> API 鍵 よりコピー
     api_key_v2 = "<your api key>"
-    # IBM Cloud 画面 URLの https://jp-tok.discovery.watson.cloud.ibm.com/v2/instances/(省略)/projects/<your project id>/workspace から抜粋  # noqa: E501
+    # IBM Cloud 画面: 自分のプロジェクト -> Integrate and deploy -> API Information で確認可能
     project_id = "<your project id>"
     # IBM Cloud 画面 URLの https://jp-tok.discovery.watson.cloud.ibm.com/v2/instances/(省略)/collections/<your collection id>/activity  # noqa: E501
     collection_id = "<your collection id>"
-    # URL の構造明示のため分解
-    host = "api.jp-tok.discovery.watson.cloud.ibm.com"
-    instance_id = "<your instance id>"
-    url = f"https://{host}/instances/{instance_id}"
-
+    # IBM Cloud 画面: 管理 -> 資格情報 -> URL よりコピー
+    url = "<your url>"
     training_file = "v2_training_data.csv"
-    with open(training_file) as file:
-        total_lines = sum(1 for _ in file)
-    num_queries_len = total_lines - 2
-
+    num_queries_len = 2  # training_file 内の num_queries の最大数に変更
     try:
         discovery = authentication_v2(api_key_v2, url)
         logger.info("authenticated.")
-        # training 用 CSV ファイルの読み込み
+        # トレーニング用 CSV ファイルの読み込み
         df = pd.read_csv(training_file)
         logger.info(f"read [{training_file}].")
         # num_queries のループ処理
         for i in range(num_queries_len):
-            df_per_num_queries = df.query('num_queries =='+str(i))
-            natural_language_query, examples = prepare_data(collection_id, df_per_num_queries)  # noqa: E501
+            df_per_num_queries = df.query(f"num_queries =={i}")
+            natural_language_query, examples = conver_df_to_training_exaples(collection_id, df_per_num_queries)  # noqa: E501
             logger.info(f"prepared data. | natural_language_query: {natural_language_query}, examples:\n {examples}")  # noqa: E501
-            jsonized_response = create_training_query_v2(
+            # 2. トレーニングクエリの追加 / 7. トレーニングクエリ例の追加
+            create_response = create_training_query_v2(
                 discovery=discovery,
                 project_id=project_id,
                 natural_language_query=natural_language_query,
-                examples=examples
-            )
-            logger.info(f"********** respose {i} ********** :\n{jsonized_response}")  # noqa: E501
+                examples=examples)
+            logger.info(f"********** respose of create_training_query_v2() {i} ********** :\n{json_dumps(create_response)}")  # noqa: E501
+            query_id = create_response["query_id"]
+            get_response = get_training_query_v2(
+                    discovery=discovery,
+                    project_id=project_id,
+                    query_id=query_id)
+            logger.info(f"********** respose of get_training_query_v2() {i} ********** :\n{json_dumps(get_response)}")  # noqa: E501
     except ApiException:
         logger.exception("Api exception.")
         sys.exit(1)
