@@ -15,7 +15,6 @@ from ibm_watson import DiscoveryV2
 from ibm_watson.discovery_v2 import TrainingExample
 
 from helper import authentication_v2, conver_df_to_training_exaples
-from list import get_training_query_v2
 from utils import json_dumps
 
 
@@ -77,12 +76,6 @@ if __name__ == "__main__":
                 natural_language_query=natural_language_query,
                 examples=examples)
             logger.info(f"********** respose of create_training_query_v2() {i} ********** :\n{json_dumps(create_response)}")  # noqa: E501
-            query_id = create_response["query_id"]
-            get_response = get_training_query_v2(
-                    discovery=discovery,
-                    project_id=project_id,
-                    query_id=query_id)
-            logger.info(f"********** respose of get_training_query_v2() {i} ********** :\n{json_dumps(get_response)}")  # noqa: E501
     except ApiException:
         logger.exception("Api exception.")
         sys.exit(1)

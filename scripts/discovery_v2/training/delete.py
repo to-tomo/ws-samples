@@ -60,9 +60,9 @@ if __name__ == "__main__":
         natural_language_query = list_response["queries"][0]["natural_language_query"]  # noqa: E501
         # 5. クエリを削除
         delete_training_query_v2(
-                discovery=discovery,
-                project_id=project_id,
-                query_id=query_id)
+            discovery=discovery,
+            project_id=project_id,
+            query_id=query_id)
         logger.info(f"deleted training query. | query_id: {query_id}, natural_language_query: {natural_language_query}")  # noqa: E501
     except ApiException:
         logger.exception("Api exception.")

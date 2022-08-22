@@ -4,7 +4,7 @@ Watson Discovery V2 API
     04. トレーニングデータクエリの詳細取得
     06. トレーニングデータクエリ例のリスト
     10. トレーニングデータ例の詳細取得
-MEMO: 前提としてトレーニングデータへのクエリ追加処理を実施済みであること
+MEMO: 前提としてトレーニングクエリの追加が実施済みであること
 """
 
 import logging
@@ -59,14 +59,11 @@ def get_training_query_v2(
 if __name__ == "__main__":
     # ご自身の環境に合わせて修正
     # IBM Cloud 画面: 管理 -> 資格情報 -> API 鍵 よりコピー
-    # api_key_v2 = "<your api key>"
-    api_key_v2 = "FBGigKC8wDQ2O-fN-AID-zrJeMaaLSnMY6rq5bvZsUX4"
+    api_key_v2 = "<your api key>"
     # IBM Cloud 画面: 自分のプロジェクト -> Integrate and deploy -> API Information で確認可能
-    # project_id = "<your project id>"
-    project_id = "7e3ae262-db94-42bc-9942-1cb9ec59fd7a"
+    project_id = "<your project id>"
     # IBM Cloud 画面: 管理 -> 資格情報 -> URL よりコピー
-    # url = "<your url>"
-    url = "https://api.jp-tok.discovery.watson.cloud.ibm.com/instances/ae6d7a25-0647-42b2-8993-257539ef4b38"  # noqa: E501
+    url = "<your url>"
     try:
         discovery = authentication_v2(api_key_v2, url)
         logger.info("authenticated.")
