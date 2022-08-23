@@ -68,13 +68,12 @@ def query_v2(
 
 if __name__ == "__main__":
     # ご自身の環境に合わせて修正
+    # IBM Cloud 画面: 管理 -> 資格情報 -> API 鍵 よりコピー
     api_key_v2 = "<your api key>"
-    # IBM Cloud 画面 URLの https://jp-tok.discovery.watson.cloud.ibm.com/v2/instances/(省略)/projects/<your project id>/workspace から抜粋  # noqa: E501
+    # IBM Watson Discovery 画面: 自分のプロジェクト -> Integrate and deploy -> API Information で確認可能  # noqa: E501
     project_id = "<your project id>"
-    # URL の構造明示のため分解
-    host = "api.jp-tok.discovery.watson.cloud.ibm.com"
-    instance_id = "<your instance id>"
-    url = f"https://{host}/instances/{instance_id}"
+    # IBM Cloud 画面: 管理 -> 資格情報 -> URL よりコピー
+    url = "<your project>"
     try:
         discovery = authentication_v2(api_key_v2, url)
         logger.info("authenticated.")
