@@ -10,4 +10,4 @@ environment_id = "<your environment id>"
 # IBM Watson Discovery 画面 の右上の API アイコン -> Collection ID よりコピー
 collection_id = "<your collection id>"
 # IBM Cloud 画面: 管理 -> 資格情報 -> URL よりコピー
-url = "your url"
+url = "<your url>"
