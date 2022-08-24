@@ -4,7 +4,7 @@ Watson Discovery V1 API
     2. 複数のコレクションを照会
     3. システム通知の照会
     4. 複数収集システム通知の照会
-    5. オートコンプリート候補の取得 NOTE: Cloud Pak 版のみ有効であるため未対応
+    5. オートコンプリート候補の取得 NOTE: Cloud Pak 版のみ有効であるため未確認
 """
 
 import logging
