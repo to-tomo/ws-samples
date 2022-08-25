@@ -14,7 +14,7 @@ import sys
 
 from ibm_cloud_sdk_core.api_exception import ApiException
 from ibm_watson import DiscoveryV2
-from ibm_watson.discovery_v2 import QueryLargeTableResults, QueryLargeSuggestedRefinements, QueryLargePassages  # noqa: E501
+from ibm_watson.discovery_v2 import QueryLargePassages, QueryLargeSimilar, QueryLargeSuggestedRefinements, QueryLargeTableResults  # noqa: E501
 
 
 import config
@@ -42,7 +42,8 @@ def query_v2(
         spelling_suggestions: bool = None,
         table_results: QueryLargeTableResults = None,
         suggested_refinements: QueryLargeSuggestedRefinements = None,
-        passages: QueryLargePassages = None) -> Response:
+        passages: QueryLargePassages = None,
+        similar: QueryLargeSimilar = None) -> Response:
     """
     プロジェクトを照会
     MEMO: https://cloud.ibm.com/apidocs/discovery-data?code=python#query
@@ -63,7 +64,8 @@ def query_v2(
         spelling_suggestions=spelling_suggestions,
         table_results=table_results,
         suggested_refinements=suggested_refinements,
-        passages=passages).get_result()
+        passages=passages,
+        similar=similar).get_result()
     return response
 
 
@@ -144,6 +146,16 @@ if __name__ == "__main__":
     project_id = config.project_id
     collection_id = config.collection_id
     url = config.url
+    query_param1 = {
+        "query": "スマートフォン",
+        "natural_language_query": None,
+        "filter": "enriched_text.entities.text: パナソニック",
+        "aggregation": "max(enriched_text.entities.mentions.confidence)"}
+    query_param2 = {
+        "query": None,
+        "natural_language_query": "スマートフォンが登場",
+        "filter": "enriched_text.entities.text: パナソニック",
+        "aggregation": "max(enriched_text.entities.mentions.confidence)"}
     passages = {
         # v1 API と同じ動作
         "v1": QueryLargePassages(
@@ -179,7 +191,10 @@ if __name__ == "__main__":
             discovery=discovery,
             project_id=project_id,
             collection_ids=[collection_id],
-            natural_language_query="スマートフォン",
+            query=query_param1["query"],
+            natural_language_query=query_param1["natural_language_query"],
+            filter=query_param1["filter"],
+            aggregation=query_param1["aggregation"],
             count=1,
             passages=passages["v1"])
         logger.info(f"********** respose of query_v2-1 ********** :\n{json_dumps(query_response)}")  # noqa: E501
@@ -187,7 +202,10 @@ if __name__ == "__main__":
         query_response = query_v2(
             discovery=discovery,
             project_id=project_id,
-            natural_language_query="スマートフォン",
+            query=query_param1["query"],
+            natural_language_query=query_param1["natural_language_query"],
+            filter=query_param1["filter"],
+            aggregation=query_param1["aggregation"],
             count=1,
             passages=passages["v1"])
         logger.info(f"********** respose of query_v2-2 ********** :\n{json_dumps(query_response)}")  # noqa: E501
