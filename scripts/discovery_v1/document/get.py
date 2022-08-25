@@ -1,12 +1,12 @@
 """
-Watson Discovery V1 API を使用してドキュメント更新
+Watson Discovery V1 API を使用してドキュメントの状態を取得
 """
 
 import glob
 import json
 import logging
 import sys
-from typing import Any
+from typing import Any, List
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import DiscoveryV1
 
@@ -30,31 +30,54 @@ def authentication_v1(api_key: str, url: str) -> DiscoveryV1:
     return discovery
 
 
-def update_document_v1(
-    discovery: DiscoveryV1,
-    environment_id: str,
-    collection_id: str,
-    document_id: str,
-    filename: str = None,
-    file_content_type: str = "application/json",
-    metadata: str = None,
-        ) -> Any:
-    """
-    ドキュメント更新の実行
-    MEMO: https://cloud.ibm.com/apidocs/discovery?code=python#updatedocument  # noqa: E501
-    """
+def query_results_v1(
+        discovery: DiscoveryV1,
+        environment_id: str,
+        collection_id: str,
+        filter: str = None,
+        query: str = None,
+        natural_language_query: str = None,
+        aggregation: str = None,
+        count: int = None,
+        return_: List[str] = None,
+        offset: int = None,
+        sort: str = None,
+        highlight: bool = None,
+        spelling_suggestions: bool = None) -> List:
 
-    with open(filename, "r", encoding="UTF-8") as file:
-        add_doc = discovery.update_document(
-            environment_id=environment_id,
-            collection_id=collection_id,
-            document_id=document_id,
-            file=file,
-            filename=filename,
-            file_content_type=file_content_type,
-            metadata=metadata,
-            ).get_result()
-    return json.dumps(add_doc, indent=2, ensure_ascii=False)
+    """
+    results の取得
+    MEMO: https://cloud.ibm.com/apidocs/discovery?code=python#query
+    """
+    response = discovery.query(
+        environment_id=environment_id,
+        collection_id=collection_id,
+        filter=filter,
+        query=query,
+        natural_language_query=natural_language_query,
+        aggregation=aggregation,
+        count=count,
+        return_=return_,
+        offset=offset,
+        sort=sort,
+        highlight=highlight,
+        spelling_suggestions=spelling_suggestions
+        ).get_result()
+    return response["results"]
+
+
+def get_document_status_v1(
+        discovery: DiscoveryV1,
+        environment_id: str,
+        collection_id: str,
+        document_id: str) -> Any:
+
+    doc_info = discovery.get_document_status(
+        environment_id=environment_id,
+        collection_id=collection_id,
+        document_id=document_id
+    ).get_result()
+    return json.dumps(doc_info, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":
@@ -70,16 +93,21 @@ if __name__ == "__main__":
         discovery = authentication_v1(api_key_v1, url)
         logger.info("authenticated.")
 
+        results = query_results_v1(
+            discovery=discovery,
+            environment_id=environment_id,
+            collection_id=collection_id,
+            count=250
+        )
         for i in range(len(data_files)):
+            document_id = results[i]["id"]
             data_file = data_files[i]
-            document_id = data_file[5:].replace(".", "-")    # ピリオド「.」は document_id として使用できないため。<ファイル名-拡張子>に変更。  # noqa: E501
             logger.info(f"input data. | document_id: {document_id}, file: {data_file}")  # noqa: E501
-            jsonized_response = update_document_v1(
+            jsonized_response = get_document_status_v1(
                 discovery=discovery,
                 environment_id=environment_id,
                 collection_id=collection_id,
-                document_id=document_id,
-                filename=data_file
+                document_id=document_id
             )
             logger.info(f"********** respose of [document_id: {document_id}] ********** :\n{jsonized_response}")  # noqa: E501
     except Exception:
