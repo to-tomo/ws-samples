@@ -1,11 +1,12 @@
 """
-Watson Discovery V2 API を使用して検索実行
+Watson Discovery V2 API を使用してドキュメント削除
 """
 
+import glob
 import json
 import logging
-from typing import Any, List
 import sys
+from typing import Any, List
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import DiscoveryV2
 
@@ -29,7 +30,7 @@ def authentication_v2(api_key: str, url: str) -> DiscoveryV2:
     return discovery
 
 
-def query_v2(
+def query_results_v2(
     discovery: DiscoveryV2,
     project_id: str,
     collection_ids: List[str] = None,
@@ -37,15 +38,15 @@ def query_v2(
     query: str = None,
     natural_language_query: str = None,
     aggregation: str = None,
-    count: int = 1,  # 暫定でデフォルト1件
+    count: int = None,
     return_: List[str] = None,
     offset: int = None,
-    sort: str = "+",  # 暫定でデフォルト昇順
+    sort: str = None,
     highlight: bool = None,
     spelling_suggestions: bool = None
-        ) -> Any:
+        ) -> List:
     """
-    query 検索 or 自然言語 query の実行
+    results の取得
     MEMO: https://cloud.ibm.com/apidocs/discovery-data?code=python#query
     """
     response = discovery.query(
@@ -62,34 +63,52 @@ def query_v2(
         highlight=highlight,
         spelling_suggestions=spelling_suggestions
         ).get_result()
-    return json.dumps(response, indent=2, ensure_ascii=False)
+    return response["results"]
+
+
+def delete_document_v2(
+        discovery: DiscoveryV2,
+        project_id: str,
+        collection_id: str,
+        document_id: str) -> Any:
+
+    delete_doc = discovery.delete_document(
+        project_id=project_id,
+        collection_id=collection_id,
+        document_id=document_id,
+    ).get_result()
+    return json.dumps(delete_doc, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":
-    api_key_v2 = "<your api key>"
+    api_key_v2 = "<api key>"  # 瀬川さん環境のapikey
     # IBM Cloud 画面 URLの https://jp-tok.discovery.watson.cloud.ibm.com/v2/instances/(省略)/projects/<your project id>/workspace から抜粋  # noqa: E501
-    project_id = "<your project id>"
-    # URL の構造明示のため分解
-    host = "api.jp-tok.discovery.watson.cloud.ibm.com"
-    instance_id = "<your instance id>"
-    url = f"https://{host}/instances/{instance_id}"
+    project_id = "<project id>"
+    # IBM Cloud 画面 URLの https://jp-tok.discovery.watson.cloud.ibm.com/v2/instances/(省略)/collections/<your collection id>/activity  # noqa: E501
+    collection_id = "<collection id>"
+    url = "https://<host>/instances/<instance id>"
+    # NOTE: 本来は必要ないがファイルを取得
+    data_files = glob.glob("data/*.json")
     try:
         discovery = authentication_v2(api_key_v2, url)
         logger.info("authenticated.")
-        query = "日本"
-        jsonized_response = query_v2(
+        results = query_results_v2(
             discovery=discovery,
             project_id=project_id,
-            query=query
+            collection_ids=[collection_id],
+            count=250
         )
-        logger.info(f"********** respose of query ********** :\n{jsonized_response}")  # noqa: E501
-        natural_language_query = "日本"
-        jsonized_response = query_v2(
-            discovery=discovery,
-            project_id=project_id,
-            natural_language_query=natural_language_query
-        )
-        logger.info(f"********** respose of natural_language_query ********** :\n{jsonized_response}")  # noqa: E501
+        for i in range(len(data_files)):
+            document_id = results[i]["document_id"]
+            file_name = results[i]["file_name"]
+            logger.info(f"input data. | document_id: {document_id}, file: {file_name}")  # noqa: E501
+            jsonized_response = delete_document_v2(
+                discovery=discovery,
+                project_id=project_id,
+                collection_id=collection_id,
+                document_id=document_id,
+            )
+            logger.info(f"********** respose of [document_id: {document_id}] ********** :\n{jsonized_response}")  # noqa: E501
     except Exception:
         logger.exception("Unexpected exception.")
         sys.exit(1)
