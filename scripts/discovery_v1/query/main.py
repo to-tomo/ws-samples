@@ -256,6 +256,17 @@ if __name__ == "__main__":
     environment_id = config.environment_id
     collection_id = config.collection_id
     url = config.url
+    query_param1 = {
+        "query": "スマートフォン",
+        "natural_language_query": None,
+        "filter": "enriched_text.entities.text: パナソニック",
+        # "aggregation": None}
+        "aggregation": "max(enriched_text.entities.confidence)"}
+    query_param2 = {
+        "query": None,
+        "natural_language_query": "スマートフォンが登場",
+        "filter": "enriched_text.entities.text: パナソニック",
+        "aggregation": "max(enriched_text.entities.confidence)"}
     try:
         discovery = authentication_v1(api_key_v1, url)
         logger.info("authenticated.")
@@ -264,19 +275,25 @@ if __name__ == "__main__":
             discovery=discovery,
             environment_id=environment_id,
             collection_id=collection_id,
-            natural_language_query="スマートフォン",
+            filter=query_param1["filter"],
+            query=query_param1["query"],
+            natural_language_query=query_param1["natural_language_query"],
+            aggregation=query_param1["aggregation"],
             count=1,
             passages=True,
             passages_fields=None,
             passages_count=10,
             passages_characters=50)
-        logger.info(f"********** respose of query_v1 ********** :\n{json_dumps(query_response)}")  # noqa: E50
+        logger.info(f"********** respose of query_v1 ********** :\n{json_dumps(query_response)}")  # noqa: E501
         # 2. 複数のコレクションを照会
         federated_query_response = federated_query_v1(
             discovery=discovery,
             environment_id=environment_id,
             collection_ids=collection_id,
-            natural_language_query="スマートフォン",
+            filter=query_param1["filter"],
+            query=query_param1["query"],
+            natural_language_query=query_param1["natural_language_query"],
+            aggregation=query_param1["aggregation"],
             count=1,
             passages=True,
             passages_fields=None,
