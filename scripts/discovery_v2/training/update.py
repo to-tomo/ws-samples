@@ -15,7 +15,7 @@ from ibm_watson import DiscoveryV2
 from ibm_watson.discovery_v2 import TrainingExample
 
 import config
-from helper import authentication_v2, conver_res_to_training_exaples
+from helper import authentication_v2, conver_res_to_training_examples
 from list import list_training_queries_v2
 from utils import json_dumps
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
                 project_id=project_id,
                 query_id=query["query_id"],
                 natural_language_query=query["natural_language_query"],
-                examples=conver_res_to_training_exaples(query["examples"]))
+                examples=conver_res_to_training_examples(query["examples"]))
         logger.info(f"********** respose of update_training_query_v2() ********** :\n{json_dumps(update_response)}")  # noqa: E501
     except ApiException:
         logger.exception("Api exception.")

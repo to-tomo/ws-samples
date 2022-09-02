@@ -43,7 +43,7 @@ def conver_df_to_training_exaples(collection_id: str, df: pd.DataFrame) -> Any:
     return natural_language_query, examples
 
 
-def conver_res_to_training_exaples(examples: Response) -> List:
+def conver_res_to_training_examples(examples: Response) -> List:
     """
     トレーニングクエリ例を含むレスポンスを TrainingExample のリストに変換
     """
